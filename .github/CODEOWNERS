@@ -1,0 +1,6 @@
+# Default owner for everything in this repo.
+# Owners are automatically requested for review on pull requests.
+* @luucasorion
+
+# Architectural decisions — review carefully; changes here often need an ADR.
+/docs/adr/ @luucasorion
