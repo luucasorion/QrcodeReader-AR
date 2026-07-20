@@ -1,5 +1,11 @@
 # QR Reader (Quest 3 AR)
 
+[![Status: early development](https://img.shields.io/badge/status-early%20development-orange)](docs/implementation-plan.md)
+[![Platform: Quest 3 / 3S](https://img.shields.io/badge/platform-Quest%203%20%2F%203S-1c1e21)](docs/project-context.md)
+[![Engine: Unity 6 + URP](https://img.shields.io/badge/engine-Unity%206%20%2B%20URP-000000)](docs/architecture.md)
+[![Meta XR SDK v203](https://img.shields.io/badge/Meta%20XR%20SDK-v203-0467df)](docs/adr/0001-use-meta-xr-unity-mcp-extension.md)
+[![License: internal / TBD](https://img.shields.io/badge/license-internal%20%2F%20TBD-lightgrey)](#license)
+
 A Meta Quest 3 / 3S **passthrough mixed-reality** app: you see the real world through
 passthrough, and when the headset detects a printed **QR code**, the app downloads the media
 referenced by the QR's URL and renders it — an **image or GIF** — in place of the physical code,

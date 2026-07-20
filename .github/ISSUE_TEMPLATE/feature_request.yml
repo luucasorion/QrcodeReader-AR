@@ -1,0 +1,46 @@
+name: Feature request
+description: Suggest a change or new capability
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before filing: check whether this is already **deferred / out of scope** (websites,
+        spatial-anchor persistence, texture caching) in the [project context](../docs/project-context.md).
+        A new technology or architectural decision requires a **new or updated ADR** — see
+        [architecture §8](../docs/architecture.md#8-development-conventions).
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / motivation
+      description: What are you trying to do, and why can't you today?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: What would you like to happen?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: needs-adr
+    attributes:
+      label: Does this introduce a new technology or architectural decision?
+      description: If yes, it needs an ADR before implementation.
+      options:
+        - "No — fits within existing decisions"
+        - "Yes — will need a new/updated ADR"
+        - "Unsure"
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+    validations:
+      required: false

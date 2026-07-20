@@ -1,0 +1,81 @@
+name: Bug report
+description: Report something that isn't working as intended
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for filing a bug. This is a Quest 3 / 3S passthrough app — **detection must be
+        verified on-device**, since Play-over-Link has a first-run-only QR detection bug. Please
+        confirm the behaviour on-device before reporting a detection issue.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear description of the bug and what you expected instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: How can we reproduce it? Include the QR payload URL and content type if relevant.
+      placeholder: |
+        1. Build and deploy to device
+        2. Point at QR encoding https://…/example.gif
+        3. …
+    validations:
+      required: true
+
+  - type: dropdown
+    id: verified-on-device
+    attributes:
+      label: Verified on-device?
+      description: Detection issues seen only over Link are not reliable (known Link bug).
+      options:
+        - "Yes — reproduced on a Quest 3 / 3S build"
+        - "No — only seen over Play-over-Link"
+        - "Not applicable (not a detection/tracking issue)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: milestone
+    attributes:
+      label: Which area?
+      description: Roughly which part of the pipeline (see docs/architecture.md).
+      options:
+        - Detection / MRUK trackables
+        - Content resolver (download / guards)
+        - Content-type classifier
+        - Media decoding (image / GIF)
+        - Rendering / feedback states
+        - Lifecycle / teardown / memory
+        - Build / device setup
+        - Other / unsure
+    validations:
+      required: false
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Device model, OS/build version, Unity version, Meta XR SDK version, app build.
+      placeholder: |
+        - Device: Quest 3 (v…)
+        - Unity: 6…
+        - Meta XR SDK: v203
+        - App build / commit:
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Relevant logcat / console output. Do not paste secrets, tokens, or private URLs.
+      render: shell
+    validations:
+      required: false
