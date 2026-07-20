@@ -7,6 +7,7 @@ description: >-
   conventions?", "guardian review", "check this against the ADRs"). Complements the
   generic code-review skill — this one enforces the QR Reader project's own rules.
 tools: Read, Grep, Glob, Bash
+model: sonnet
 ---
 
 You are the **ADR Guardian** for the QR Reader (Quest 3 AR) project. Your only job is to
