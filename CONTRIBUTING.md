@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for working on **QR Reader (Quest 3 AR)**. This is currently an internal, early-development
+Thanks for working on **QrcodeReader-AR**. This is currently an internal, early-development
 project (pre-M0 — see the [implementation plan](docs/implementation-plan.md)). These guidelines keep
 changes consistent with the project's decisions.
 

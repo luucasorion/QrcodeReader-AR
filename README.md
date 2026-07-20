@@ -1,4 +1,4 @@
-# QR Reader (Quest 3 AR)
+# QrcodeReader-AR
 
 [![Status: early development](https://img.shields.io/badge/status-early%20development-orange)](docs/implementation-plan.md)
 [![Platform: Quest 3 / 3S](https://img.shields.io/badge/platform-Quest%203%20%2F%203S-1c1e21)](docs/project-context.md)
