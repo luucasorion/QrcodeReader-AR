@@ -11,9 +11,8 @@ passthrough, and when the headset detects a printed **QR code**, the app downloa
 referenced by the QR's URL and renders it — an **image or GIF** — in place of the physical code,
 tracked to its real-world pose. Multiple QR codes are tracked and rendered at once.
 
-> **Naming note:** the repository is called `QrcodeReader-VR`, but this is an **AR / passthrough
-> MR** experience (the real world stays visible), **not** VR (a fully virtual scene). The docs and
-> this README use "AR / passthrough MR"; treat the `-VR` suffix as a legacy repo slug only.
+> **Note:** this is an **AR / passthrough MR** experience — the real world stays visible — **not**
+> VR (a fully virtual scene). The docs and this README use "AR / passthrough MR" throughout.
 
 ---
 
