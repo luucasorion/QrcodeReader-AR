@@ -1,0 +1,18 @@
+{
+    "name": "QRReader.Editor",
+    "rootNamespace": "QRReader.Editor",
+    "references": [
+        "GUID:f66acb5d5d3741d3b1d40ed3cc5491f9"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
