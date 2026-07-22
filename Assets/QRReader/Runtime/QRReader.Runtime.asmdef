@@ -1,7 +1,10 @@
 {
     "name": "QRReader.Runtime",
     "rootNamespace": "QRReader",
-    "references": [],
+    "references": [
+        "meta.xr.mrutilitykit",
+        "Oculus.VR"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
