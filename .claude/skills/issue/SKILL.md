@@ -1,6 +1,6 @@
 ---
 name: issue
-description: Start work on a QR Reader milestone/task issue by its M#-T# marker (e.g. "/issue m0 t7"). Resolves the marker to the GitHub issue, then runs the full project workflow — branch off dev, implement per the ADRs, PR into dev with `Closes #n`. Use whenever the user names an issue as "M<x> T<y>", "M<x>-T<y>", or similar.
+description: Start work on a QR Reader milestone/task issue by its M#-T# marker (e.g. "/issue m0 t7"), or the next issue after the last one completed (e.g. "/issue next", "do the next issue"). Resolves the marker to the GitHub issue, then runs the full project workflow — branch off dev, implement per the ADRs, PR into dev with `Closes #n`. Use whenever the user names an issue as "M<x> T<y>", "M<x>-T<y>", asks for "next"/"the next issue", or similar.
 ---
 
 # Work an issue by M#-T# marker
@@ -15,7 +15,66 @@ Accept any of: `m0 t7`, `M0-T7`, `m0t7`, `0 7`. Normalize to the canonical form
 `M<x>-T<y>` (uppercase, hyphen). Issue titles in this repo are `M<x>-T<y>: <summary>`
 (e.g. `M2-T7: EditMode tests for content classifier + resolver guards`).
 
-If no marker is given, ask which issue.
+If the user asks for the **"next" issue** (e.g. `/issue next`, "do the next issue",
+"next"), do **not** ask which one — resolve it automatically per section 1b.
+
+If no marker is given and the user did **not** ask for "next", ask which issue.
+
+## 1b. Resolve "next" = last completed + 1 (from git history)
+
+"Next" means the first not-yet-done task after the last one that was actually completed.
+Because merging a PR into `dev` does **not** auto-close its issue in this repo (issues are
+closed manually), the open/closed state is **not** a reliable signal — use **git history on
+`dev`** as the source of truth for what's done.
+
+1. **Find the highest completed marker** by scanning `dev` commit **subjects only** — the marker
+   of work actually done lives in the subject (`feat(m0-t1): …`) and in merge-commit subjects
+   (`Merge pull request #61 from …/feat/m0-t2-…`). **Do NOT scan commit bodies (`%b`)** — bodies
+   contain prose that references *other* markers as forward-looking notes (e.g. "…lands in M2-T7"),
+   which would falsely register as completed:
+
+   ```powershell
+   $doneKey = 0; $doneLabel = "none"
+   $log = git log dev --pretty="%s"   # subjects only — never %b
+   foreach ($m in [regex]::Matches(($log -join "`n"), '(?i)M(\d+)-T(\d+)')) {
+     $k = [int]$m.Groups[1].Value * 1000 + [int]$m.Groups[2].Value
+     if ($k -gt $doneKey) { $doneKey = $k; $doneLabel = "M$($m.Groups[1].Value)-T$($m.Groups[2].Value)" }
+   }
+   # $doneKey = milestone*1000 + task of the most recently completed issue
+   ```
+
+2. **Pick the smallest OPEN issue after it.** List open issues, extract each marker, and choose
+   the lowest `M*1000+T` that is greater than `$doneKey`. This naturally handles rolling into the
+   next milestone when a milestone's tasks are exhausted, and skips any gaps:
+
+   ```powershell
+   $gh = "$env:ProgramFiles\GitHub CLI\gh.exe"
+   $cand = & $gh issue list --state open --limit 200 --json number,title,labels |
+     ConvertFrom-Json | ForEach-Object {
+       if ($_.title -match '(?i)M(\d+)-T(\d+)') {
+         $_ | Add-Member NoteProperty Key ([int]$Matches[1]*1000 + [int]$Matches[2]) -PassThru
+       }
+     } | Where-Object { $_.Key -gt $doneKey } | Sort-Object Key | Select-Object -First 1
+   ```
+
+3. If **no** open issue is greater than `$doneKey`, report that there's nothing left after the
+   last completed issue (all done, or the next one isn't filed/open yet) and stop.
+
+4. If a candidate **is** found, **confirm it before doing any work.** Because the target was
+   auto-resolved (not named by the user), call `AskUserQuestion` with the resolved issue so the
+   user confirms with a button — do not branch or write anything until they do:
+
+   - Question: `Work this issue next?`
+   - Show the resolution in the question text: `Last completed: <doneLabel>. Next open issue:
+     #<n> — M<x>-T<y>: <title>.`
+   - Options:
+     - `Yes — start M<x>-T<y>` → proceed to section 3.
+     - `No — pick a different one` → ask the user which marker to work instead, then resolve
+       that via section 2.
+
+   Only after an affirmative confirmation, continue with the normal flow from section 3. (When
+   the user named an explicit marker instead of "next," no confirmation is needed — skip this
+   step and go straight to section 3.)
 
 ## 2. Resolve the marker to a GitHub issue
 
