@@ -1,15 +1,20 @@
 name: Unity EditMode Tests
 
-# Runs the off-device EditMode test suite (classifier + content-resolver guards, etc.)
-# on every PR into dev/main. PlayMode and on-device behaviour are intentionally out of
-# scope here — see docs/adr/0004-ci-runs-editmode-tests-via-gameci.md.
+# Runs the off-device EditMode test suite (classifier + content-resolver guards, etc.) on every
+# PR into dev/main. PlayMode and on-device behaviour are intentionally out of scope here.
+#
+# Runner: SELF-HOSTED, per docs/adr/0004-adopt-unity-cli-for-build-and-ci.md. The runner host must
+# be signed into Unity once (`unity auth login`) and have the installed editor from
+# ProjectSettings/ProjectVersion.txt. This avoids storing Unity license credentials as CI secrets:
+# hosted-runner activation of a Personal license on Unity 6 is not supported (manual .alf/.ulf
+# activation was removed by Unity), so the activated dev host is the license boundary.
 
 on:
   pull_request:
     branches: [dev, main]
   workflow_dispatch:
 
-# Cancel superseded runs on the same branch to save CI minutes.
+# Cancel superseded runs on the same branch.
 concurrency:
   group: editmode-${{ github.ref }}
   cancel-in-progress: true
@@ -17,41 +22,41 @@ concurrency:
 jobs:
   editmode:
     name: EditMode tests
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           lfs: true
 
-      # Cache the imported Library to keep cold-start import time down.
-      - name: Cache Library
-        uses: actions/cache@v4
-        with:
-          path: Library
-          key: Library-editmode-${{ hashFiles('Packages/manifest.json', 'Packages/packages-lock.json') }}
-          restore-keys: |
-            Library-editmode-
-            Library-
+      # Resolve the Unity CLI: prefer PATH, fall back to the default install location.
+      - name: Locate Unity CLI
+        id: unitycli
+        shell: pwsh
+        run: |
+          $cli = (Get-Command unity -ErrorAction SilentlyContinue).Source
+          if (-not $cli) { $cli = Join-Path $env:LOCALAPPDATA 'Unity\bin\unity.exe' }
+          if (-not (Test-Path $cli)) { throw "Unity CLI not found (PATH or $cli)" }
+          "path=$cli" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          & $cli --version
 
-      # game-ci auto-detects the editor version from ProjectSettings/ProjectVersion.txt.
-      # Unity activation credentials come from repo secrets (see ADR 0004); never commit them.
+      # unity test auto-detects the editor version from ProjectSettings/ProjectVersion.txt.
+      # --allow-install lets the CLI provision that editor if the runner lacks it.
       - name: Run EditMode tests
-        uses: game-ci/unity-test-runner@v4
+        shell: pwsh
         env:
-          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
-          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
-          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
-        with:
-          projectPath: .
-          testMode: editmode
-          artifactsPath: editmode-artifacts
-          githubToken: ${{ secrets.GITHUB_TOKEN }}
-          checkName: EditMode test results
+          UNITY_NON_INTERACTIVE: "1"
+          UNITY_NO_BANNER: "1"
+        run: |
+          & "${{ steps.unitycli.outputs.path }}" test `
+            --mode EditMode `
+            --allow-install `
+            --output editmode-results.xml `
+            --format ndjson
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: EditMode test results
-          path: editmode-artifacts
+          path: editmode-results.xml
