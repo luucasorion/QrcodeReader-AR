@@ -82,6 +82,13 @@ Configuration (architecture.md §3.8) is cross-cutting — introduced in M2 as a
 
 **Exit:** given a URL, the resolver returns bytes or a failure reason under all guards; classifier routes correctly. Isolated from rendering (architecture.md §8 "keep the untrusted-input path isolated").
 
+> **Testing & CI.** The M2-T7 tests live in the `QRReader.Tests.EditMode` assembly
+> (`Assets/Tests/EditMode/`) and run headless in CI on every PR via the **Unity CLI**
+> (`unity test --mode EditMode`) on a **self-hosted runner** — EditMode only, per
+> [ADR 0004](adr/0004-adopt-unity-cli-for-build-and-ci.md). Detection, rendering, and memory stay
+> on-device (M5-T6, M6). Keep tested logic decoupled from `MonoBehaviour`/MRUK so it stays
+> EditMode-runnable (plan R1).
+
 ---
 
 ## M3 — Media decoders
