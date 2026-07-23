@@ -1,5 +1,8 @@
 using System;
+using System.Threading.Tasks;
 using QRReader.Configuration;
+using UnityEngine;
+using UnityEngine.Networking;
 
 namespace QRReader.Resolver
 {
@@ -51,6 +54,57 @@ namespace QRReader.Resolver
 
             return Uri.TryCreate(url, UriKind.Absolute, out Uri uri)
                    && uri.Scheme.Equals(Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
+        /// Performs the <c>https</c> GET (M2-T3) for an allowed payload URL via
+        /// <see cref="UnityWebRequest"/>, applying the configured <see cref="ContentResolverConfig.TimeoutSeconds"/>.
+        /// Returns the downloaded bytes on success, or <c>null</c> if the URL fails the HTTPS-only
+        /// pre-check (<see cref="IsRequestAllowed"/>) or the request errors/times out.
+        /// </summary>
+        /// <remarks>
+        /// Interim shape: the download-size cap (M2-T4) is enforced inside this method next, and the
+        /// typed success/failure result carrying response headers (M2-T5) replaces the
+        /// <c>byte[]</c>/<c>null</c> return. Must be awaited on Unity's main thread —
+        /// <see cref="UnityWebRequest"/> is not thread-safe and its completion callback marshals back
+        /// to the main thread.
+        /// </remarks>
+        public async Task<byte[]> GetAsync(string url)
+        {
+            // Double-guard: the pipeline should pre-check, but the resolver is the single guarded
+            // network path, so never issue a request the transport gate would reject.
+            if (!IsRequestAllowed(url))
+            {
+                return null;
+            }
+
+            using var request = UnityWebRequest.Get(url);
+            request.timeout = _config.TimeoutSeconds;
+
+            await AwaitRequest(request.SendWebRequest());
+
+            if (request.result != UnityWebRequest.Result.Success)
+            {
+                Debug.LogWarning(
+                    $"{nameof(ContentResolver)}: GET failed for '{url}': {request.result} ({request.error}).");
+                return null;
+            }
+
+            return request.downloadHandler.data;
+        }
+
+        // Bridges UnityWebRequest's async operation to await without needing a coroutine host, so the
+        // resolver stays a plain class. The completed callback fires on the main thread.
+        private static Task AwaitRequest(UnityWebRequestAsyncOperation operation)
+        {
+            if (operation.isDone)
+            {
+                return Task.CompletedTask;
+            }
+
+            var tcs = new TaskCompletionSource<bool>();
+            operation.completed += _ => tcs.TrySetResult(true);
+            return tcs.Task;
         }
     }
 }
