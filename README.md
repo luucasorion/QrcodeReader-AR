@@ -36,8 +36,8 @@ Progress is tracked as milestones M0–M6 in the [implementation plan](docs/impl
 
 | ID | Milestone | Status |
 |----|-----------|--------|
-| M0 | Foundation & device setup | 🚧 In progress |
-| M1 | QR detection + lifecycle skeleton | ⬜ Not started |
+| M0 | Foundation & device setup | ✅ Done |
+| M1 | QR detection + lifecycle skeleton | 🚧 In progress |
 | M2 | Content resolver + classifier | ⬜ Not started |
 | M3 | Media decoders (image / GIF) | ⬜ Not started |
 | M4 | Renderer + feedback states | ⬜ Not started |
@@ -103,8 +103,8 @@ Adding any of these requires a new or updated ADR (see [conventions](docs/archit
 3. Build an Android APK and deploy it to the headset (on-device — not Link).
 4. Launch into passthrough and point the headset at a compliant QR code.
 
-A detailed, authoritative build-and-deploy loop will live in `docs/` (task **M0-T7**, *planned* — not
-written yet).
+For the detailed, authoritative build-and-deploy loop, see
+[**Build & on-device deploy loop**](docs/build-and-deploy.md).
 
 ### Required device setup for QR tracking
 - **Spatial Data** permission enabled on the device.
@@ -139,6 +139,7 @@ picture and component responsibilities.
 |-----|----------------|
 | [Project context](docs/project-context.md) | Decisions, scope, requirements, constraints, rejected alternatives |
 | [Architecture](docs/architecture.md) | How the system is organized to satisfy those decisions |
+| [Build & deploy](docs/build-and-deploy.md) | Build the APK and run it on Quest 3 / 3S; the on-device iteration loop |
 | [ADRs](docs/adr/) | [0001 — Meta XR Unity MCP Extension](docs/adr/0001-use-meta-xr-unity-mcp-extension.md) · [0002 — MRUK Trackables for QR](docs/adr/0002-detect-qr-with-mruk-trackables.md) · [0003 — QR payload is a runtime-downloaded URL](docs/adr/0003-qr-payload-is-runtime-downloaded-url.md) |
 | [Implementation plan](docs/implementation-plan.md) | Milestones M0–M6, tasks, dependencies, risks |
 
