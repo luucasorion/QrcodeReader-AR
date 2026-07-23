@@ -59,54 +59,82 @@ namespace QRReader.Resolver
 
         /// <summary>
         /// Performs the <c>https</c> GET (M2-T3) for an allowed payload URL via
-        /// <see cref="UnityWebRequest"/>, applying the configured <see cref="ContentResolverConfig.TimeoutSeconds"/>.
-        /// Returns the downloaded bytes on success, or <c>null</c> if the URL fails the HTTPS-only
-        /// pre-check (<see cref="IsRequestAllowed"/>) or the request errors/times out.
+        /// <see cref="UnityWebRequest"/>, applying the configured <see cref="ContentResolverConfig.TimeoutSeconds"/>,
+        /// and returns the typed <see cref="ResolveResult"/> (M2-T5): downloaded bytes + response
+        /// headers on success, or a <see cref="ResolveFailure"/> reason on any guard violation or
+        /// transport failure. This is the single guarded network path (§8), so it <em>never throws
+        /// into the pipeline</em> — every failure is a value, not an exception.
         /// </summary>
         /// <remarks>
         /// The download-size cap (M2-T4) is enforced <em>while streaming</em> by
         /// <see cref="CappedDownloadHandler"/>: an oversized <c>Content-Length</c> is rejected up
         /// front and the transfer is aborted the moment received bytes exceed
         /// <see cref="ContentResolverConfig.MaxDownloadBytes"/>, so an untrusted server can't exhaust
-        /// device memory (architecture.md §7). Interim shape: the typed success/failure result
-        /// carrying response headers (M2-T5) replaces the <c>byte[]</c>/<c>null</c> return. Must be
-        /// awaited on Unity's main thread — <see cref="UnityWebRequest"/> is not thread-safe and its
-        /// completion callback marshals back to the main thread.
+        /// device memory (architecture.md §7). Must be awaited on Unity's main thread —
+        /// <see cref="UnityWebRequest"/> is not thread-safe and its completion callback marshals back
+        /// to the main thread.
         /// </remarks>
-        public async Task<byte[]> GetAsync(string url)
+        public async Task<ResolveResult> GetAsync(string url)
         {
             // Double-guard: the pipeline should pre-check, but the resolver is the single guarded
             // network path, so never issue a request the transport gate would reject.
             if (!IsRequestAllowed(url))
             {
-                return null;
+                return ResolveResult.Failed(ResolveFailure.BlockedByPolicy);
             }
 
-            var cappedHandler = new CappedDownloadHandler(_config.MaxDownloadBytes);
-            using var request = UnityWebRequest.Get(url);
-            request.downloadHandler = cappedHandler;
-            request.timeout = _config.TimeoutSeconds;
-
-            await AwaitRequest(request.SendWebRequest());
-
-            // Check the cap first: aborting the transfer surfaces as a request error, but the real
-            // cause is the oversized body, which we want to report distinctly (and honestly).
-            if (cappedHandler.ExceededCap)
+            try
             {
-                Debug.LogWarning(
-                    $"{nameof(ContentResolver)}: download for '{url}' exceeded the " +
-                    $"{_config.MaxDownloadMebibytes} MiB cap; aborted.");
-                return null;
-            }
+                var cappedHandler = new CappedDownloadHandler(_config.MaxDownloadBytes);
+                using var request = UnityWebRequest.Get(url);
+                request.downloadHandler = cappedHandler;
+                request.timeout = _config.TimeoutSeconds;
 
-            if (request.result != UnityWebRequest.Result.Success)
+                await AwaitRequest(request.SendWebRequest());
+
+                // Check the cap first: aborting the transfer surfaces as a request error, but the real
+                // cause is the oversized body, which we want to report distinctly (and honestly).
+                if (cappedHandler.ExceededCap)
+                {
+                    Debug.LogWarning(
+                        $"{nameof(ContentResolver)}: download for '{url}' exceeded the " +
+                        $"{_config.MaxDownloadMebibytes} MiB cap; aborted.");
+                    return ResolveResult.Failed(ResolveFailure.ExceededSizeCap);
+                }
+
+                if (request.result != UnityWebRequest.Result.Success)
+                {
+                    ResolveFailure reason = ClassifyRequestFailure(request);
+                    Debug.LogWarning(
+                        $"{nameof(ContentResolver)}: GET failed for '{url}': {reason} " +
+                        $"({request.result}: {request.error}).");
+                    return ResolveResult.Failed(reason);
+                }
+
+                return ResolveResult.Succeeded(cappedHandler.data, request.GetResponseHeaders());
+            }
+            catch (Exception ex)
             {
-                Debug.LogWarning(
-                    $"{nameof(ContentResolver)}: GET failed for '{url}': {request.result} ({request.error}).");
-                return null;
+                // The resolver must never throw into the pipeline: an unexpected transport error still
+                // surfaces as a failure result so the caller routes to the error state (§4).
+                Debug.LogWarning($"{nameof(ContentResolver)}: GET for '{url}' threw: {ex.Message}");
+                return ResolveResult.Failed(ResolveFailure.NetworkError);
+            }
+        }
+
+        // A timed-out UnityWebRequest surfaces as a ConnectionError whose message names the timeout;
+        // there is no dedicated Result value, so match on that to keep the cause distinct (best effort
+        // — anything else is a generic network error). Both route to the same error visual regardless.
+        private static ResolveFailure ClassifyRequestFailure(UnityWebRequest request)
+        {
+            if (request.result == UnityWebRequest.Result.ConnectionError
+                && !string.IsNullOrEmpty(request.error)
+                && request.error.IndexOf("timeout", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                return ResolveFailure.Timeout;
             }
 
-            return cappedHandler.data;
+            return ResolveFailure.NetworkError;
         }
 
         // Bridges UnityWebRequest's async operation to await without needing a coroutine host, so the
