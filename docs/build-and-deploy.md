@@ -140,6 +140,10 @@ While iterating, watch the device log:
 adb logcat -s Unity
 ```
 
+For the full QR add/remove detection check (scene wiring, a known-good test QR, expected log
+output, and a pass/fail checklist), follow
+[qr-detection-verification.md](qr-detection-verification.md) (milestone **M1-T4**).
+
 ---
 
 ## 6. The iteration loop
