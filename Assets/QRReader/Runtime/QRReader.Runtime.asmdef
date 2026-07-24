@@ -3,7 +3,8 @@
     "rootNamespace": "QRReader",
     "references": [
         "meta.xr.mrutilitykit",
-        "Oculus.VR"
+        "Oculus.VR",
+        "MG.GIF"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
