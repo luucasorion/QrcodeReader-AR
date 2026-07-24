@@ -2,6 +2,7 @@
     "name": "QRReader.Tests.EditMode",
     "rootNamespace": "QRReader.Tests.EditMode",
     "references": [
+        "QRReader.Runtime",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],
