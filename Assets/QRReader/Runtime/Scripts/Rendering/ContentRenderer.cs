@@ -59,5 +59,46 @@ namespace QRReader.Rendering
             transform.SetPositionAndRotation(position, rotation);
             transform.localScale = ContentQuadFit.ComputeLocalScale(planeRect, scaleFactor);
         }
+
+        /// <summary>
+        /// Places the quad at <paramref name="qrCode"/>'s pose and sizes it to <paramref name="content"/>
+        /// letterboxed within the scaled QR plane, so a non-square texture keeps its aspect ratio
+        /// (M4-T3). Returns false (leaving the quad untouched) when the QR has no pose/plane yet or the
+        /// texture is null. This is the sizing the media state uses (M4-T6).
+        /// </summary>
+        public bool FitContent(IQrCode qrCode, Texture content)
+        {
+            if (qrCode == null || qrCode.Pose == null || !qrCode.PlaneRect.HasValue || content == null)
+            {
+                return false;
+            }
+
+            Transform pose = qrCode.Pose;
+            FitContent(pose.position, pose.rotation, qrCode.PlaneRect.Value, content.width, content.height);
+            return true;
+        }
+
+        /// <summary>
+        /// Places and sizes the quad at <paramref name="position"/>/<paramref name="rotation"/>, fitting
+        /// content of size <paramref name="contentWidth"/>×<paramref name="contentHeight"/> letterboxed
+        /// within <paramref name="planeRect"/> × the configured scale factor.
+        /// </summary>
+        public void FitContent(
+            Vector3 position, Quaternion rotation, Rect planeRect, float contentWidth, float contentHeight) =>
+            FitContent(position, rotation, planeRect, ScaleFactor, contentWidth, contentHeight);
+
+        /// <summary>
+        /// Letterboxed placement/sizing with an explicit <paramref name="scaleFactor"/> (bypasses
+        /// config). The seam the EditMode tests drive so the transform result can be asserted without a
+        /// config asset or a real texture.
+        /// </summary>
+        public void FitContent(
+            Vector3 position, Quaternion rotation, Rect planeRect, float scaleFactor,
+            float contentWidth, float contentHeight)
+        {
+            transform.SetPositionAndRotation(position, rotation);
+            transform.localScale = ContentQuadFit.ComputeLetterboxedLocalScale(
+                planeRect, scaleFactor, contentWidth, contentHeight);
+        }
     }
 }
