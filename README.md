@@ -38,7 +38,7 @@ Progress is tracked as milestones M0–M6 in the [implementation plan](docs/impl
 |----|-----------|--------|
 | M0 | Foundation & device setup | ✅ Done |
 | M1 | QR detection + lifecycle skeleton | ✅ Done |
-| M2 | Content resolver + classifier | 🚧 In progress |
+| M2 | Content resolver + classifier | ✅ Done |
 | M3 | Media decoders (image / GIF) | ⬜ Not started |
 | M4 | Renderer + feedback states | ⬜ Not started |
 | M5 | Multi-QR integration & teardown | ⬜ Not started |

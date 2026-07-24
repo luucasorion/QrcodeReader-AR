@@ -159,38 +159,35 @@ namespace QRReader.Resolver
         /// </summary>
         private sealed class CappedDownloadHandler : DownloadHandlerScript
         {
-            private readonly long _maxBytes;
+            private readonly DownloadSizeGuard _guard;
             private readonly MemoryStream _received = new();
 
             /// <summary>True once the declared or streamed size exceeded the cap (transfer aborted).</summary>
-            public bool ExceededCap { get; private set; }
+            public bool ExceededCap => _guard.Exceeded;
 
             // 64 KiB preallocated read buffer, reused for every chunk (avoids per-chunk allocation).
             public CappedDownloadHandler(long maxBytes) : base(new byte[64 * 1024])
             {
-                _maxBytes = maxBytes;
+                _guard = new DownloadSizeGuard(maxBytes);
             }
 
             // Fast-reject: if the server declares an oversized body, don't download it at all.
             protected override void ReceiveContentLengthHeader(ulong contentLength)
             {
-                if (contentLength > (ulong)_maxBytes)
-                {
-                    ExceededCap = true;
-                }
+                _guard.DeclareContentLength(contentLength);
             }
 
-            // Returning false aborts the in-flight request. Enforce the cap on the running total.
+            // Returning false aborts the in-flight request. The guard enforces the running total; we
+            // only buffer chunks it accepts.
             protected override bool ReceiveData(byte[] data, int dataLength)
             {
-                if (ExceededCap || data == null || dataLength <= 0)
+                if (_guard.Exceeded || data == null || dataLength <= 0)
                 {
-                    return !ExceededCap;
+                    return !_guard.Exceeded;
                 }
 
-                if (_received.Length + dataLength > _maxBytes)
+                if (!_guard.Account(dataLength))
                 {
-                    ExceededCap = true;
                     return false;
                 }
 
