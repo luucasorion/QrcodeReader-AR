@@ -38,26 +38,12 @@ namespace QRReader.Decoding
             if (!decoded.LoadImage(bytes, markNonReadable: true))
             {
                 // Undecodable: destroy the throwaway texture so a failed decode leaks nothing.
-                DestroyTexture(decoded);
+                TextureCleanup.Destroy(decoded);
                 return false;
             }
 
             texture = decoded;
             return true;
-        }
-
-        // Object.Destroy is the runtime path; DestroyImmediate is required in edit mode (e.g. EditMode
-        // tests), where Destroy is disallowed. Keeps the decoder usable and leak-free in both.
-        private static void DestroyTexture(Object obj)
-        {
-            if (Application.isPlaying)
-            {
-                Object.Destroy(obj);
-            }
-            else
-            {
-                Object.DestroyImmediate(obj);
-            }
         }
     }
 }
