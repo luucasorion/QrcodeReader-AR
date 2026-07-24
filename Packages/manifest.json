@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "com.coplaydev.unity-mcp": "https://github.com/CoplayDev/unity-mcp.git?path=/MCPForUnity#main",
+    "com.gwaredd.mggif": "https://github.com/gwaredd/mgGif.git#b0cb65346e3192498f5789f7786683d93cbe69ad",
     "com.meta.xr.sdk.all": "203.0.2",
     "com.meta.xr.unity-mcp.extension": "https://github.com/meta-quest/Unity-MCP-Extensions.git",
     "com.unity.ai.navigation": "2.0.13",
