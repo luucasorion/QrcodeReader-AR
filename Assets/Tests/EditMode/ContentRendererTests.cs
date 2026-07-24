@@ -87,6 +87,33 @@ namespace QRReader.Tests.EditMode
             Assert.That(renderer.transform.localScale, Is.EqualTo(Vector3.one));
         }
 
+        [Test]
+        public void FitContent_Letterboxes_Wide_Content_Within_The_Scaled_Box()
+        {
+            ContentRenderer renderer = NewRenderer();
+            var position = new Vector3(0f, 1f, 0f);
+
+            // 0.1×0.1 plane × factor 3 → 0.3×0.3 box; 4:1 content → full width, quarter height.
+            renderer.FitContent(position, Quaternion.identity, new Rect(0f, 0f, 0.1f, 0.1f), 3f, 400f, 100f);
+
+            Assert.That(renderer.transform.position, Is.EqualTo(position));
+            Assert.That(renderer.transform.localScale.x, Is.EqualTo(0.3f).Within(1e-5f));
+            Assert.That(renderer.transform.localScale.y, Is.EqualTo(0.075f).Within(1e-5f));
+        }
+
+        [Test]
+        public void FitContent_Declines_When_Texture_Is_Null()
+        {
+            ContentRenderer renderer = NewRenderer();
+            GameObject poseGo = NewGameObject("pose");
+            var qr = new FakeQrCode { PoseTransform = poseGo.transform, Plane = new Rect(0f, 0f, 0.1f, 0.1f) };
+
+            bool fitted = renderer.FitContent(qr, null);
+
+            Assert.That(fitted, Is.False);
+            Assert.That(renderer.transform.localScale, Is.EqualTo(Vector3.one));
+        }
+
         private ContentRenderer NewRenderer() => NewGameObject("quad").AddComponent<ContentRenderer>();
 
         private GameObject NewGameObject(string name)
