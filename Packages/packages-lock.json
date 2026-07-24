@@ -17,6 +17,13 @@
       },
       "hash": "c14de1e6dc01ab42d2bb358730cff954bce0ce6b"
     },
+    "com.gwaredd.mggif": {
+      "version": "https://github.com/gwaredd/mgGif.git#b0cb65346e3192498f5789f7786683d93cbe69ad",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "b0cb65346e3192498f5789f7786683d93cbe69ad"
+    },
     "com.meta.xr.mrutilitykit": {
       "version": "203.0.0",
       "depth": 1,

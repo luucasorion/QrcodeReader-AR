@@ -64,25 +64,12 @@ namespace QRReader.Decoding
             return true;
         }
 
-        // Free textures created before a mid-stream failure. Object.Destroy is the runtime path;
-        // DestroyImmediate is required in edit mode (e.g. EditMode tests), where Destroy is disallowed.
+        // Free textures created before a mid-stream failure so a failed decode leaks nothing.
         private static void DestroyFrames(List<GifFrame> frames)
         {
             foreach (GifFrame frame in frames)
             {
-                if (frame.Texture == null)
-                {
-                    continue;
-                }
-
-                if (Application.isPlaying)
-                {
-                    UnityEngine.Object.Destroy(frame.Texture);
-                }
-                else
-                {
-                    UnityEngine.Object.DestroyImmediate(frame.Texture);
-                }
+                TextureCleanup.Destroy(frame.Texture);
             }
 
             frames.Clear();
