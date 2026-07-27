@@ -42,15 +42,12 @@ tracked to its real-world pose. Multiple codes are tracked and rendered simultan
 
 ## Demo
 
-> 📸 The captures below are **placeholders**. Replace the files in [`docs/media/`](docs/media/) with
-> real headset POV screenshots (or a recording) — the layout is already wired up.
-
 <div align="center">
 
-| Single QR → image | Multiple QR codes | Animated GIF |
-|:---:|:---:|:---:|
-| <img alt="POV: a single QR resolving to an image" src="docs/media/pov-single-qr.png" width="300"> | <img alt="POV: multiple QR codes tracked at once" src="docs/media/pov-multi-qr.png" width="300"> | <img alt="POV: a GIF playing on a QR pose" src="docs/media/pov-gif-playback.png" width="300"> |
-| One printed code resolves to an image on its pose | Several codes tracked and rendered at once | A code whose URL points at a GIF, playing in place |
+<img alt="Headset POV: a printed QR code resolved to an image, rendered on its pose through passthrough" src="docs/media/demo_example.jpg" width="720">
+
+<br>
+<em>Headset POV — a printed QR code resolved to an image, rendered on its real-world pose through passthrough.</em>
 
 </div>
 
