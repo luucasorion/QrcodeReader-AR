@@ -33,7 +33,7 @@ passthrough.
 | V5 | All three render **simultaneously & independently** | image, GIF, and error are all visible at once; one code's outcome doesn't affect another's (§4) |
 | V6 | Content stays **aligned** to each code's pose while tracked | as you move your head / the codes, each quad tracks its code's (low-frequency) pose (M5-T2, ADR 0002) |
 | V7 | Removing one code **tears it down independently** | that code's content disappears; the others keep rendering unchanged (M5-T4) |
-| V8 | No lingering content / no leak after removal | removed content does not reappear or leave a ghost; memory returns (profiler leak check is **M6-T3**) |
+| V8 | No lingering content / no leak after removal | removed content does not reappear or leave a ghost; memory returns (profiler leak check is **M6-T3**, [`memory-validation.md`](memory-validation.md)) |
 
 The components under test are the wired pipeline: `QrDetectionSource` (§3.2) →
 `TrackableLifecycleManager` (§3.3) → `ContentResolver` (§3.4) → `ContentTypeClassifier` (§3.5) →
@@ -62,7 +62,8 @@ The components under test are the wired pipeline: `QrDetectionSource` (§3.2) �
 | Download cap | **25 MiB** | oversized body is aborted mid-stream → error icon (§7) |
 
 (Finalizing/tuning this configuration surface is **M6-T1**; exercising every individual error path
-on device is **M6-T2**. This test only needs *one* failing code to prove the error path renders.)
+on device is **M6-T2** — see [`error-path-verification.md`](error-path-verification.md). This test
+only needs *one* failing code to prove the error path renders.)
 
 ---
 
@@ -111,7 +112,8 @@ its own sheet so they can be revealed/removed independently.
 - [ ] **V7** — removing one code tears down only that code; others unaffected.
 - [ ] **V8** — no lingering/ghost content after removal; content rebuilds on re-detect.
 
-**M5 is complete when V1–V8 all pass.** Profiler-based GIF memory/leak validation is **M6-T3**.
+**M5 is complete when V1–V8 all pass.** Profiler-based GIF memory/leak validation is **M6-T3** —
+see [`memory-validation.md`](memory-validation.md).
 
 ### Result log (fill in on device)
 

@@ -9,10 +9,12 @@ namespace QRReader.Configuration
     /// hard-coded.
     /// </summary>
     /// <remarks>
-    /// This is a stub introduced in M2 (implementation-plan.md M2-T1) and completed in M6. It covers
-    /// the resolver guards only; the renderer's scale factor is added to configuration separately in
-    /// M4-T2. Create an asset via <c>Assets ▸ Create ▸ QR Reader ▸ Content Resolver Config</c> and
-    /// hand it to the resolver.
+    /// Introduced in M2 (implementation-plan.md M2-T1); the configuration surface was finalized and
+    /// documented in M6-T1 (see <c>docs/configuration.md</c>). This asset covers the resolver guards
+    /// only; the renderer's scale factor lives in <see cref="ContentRendererConfig"/>. The authored
+    /// asset lives at <c>Assets/QRReader/Runtime/Config/ContentResolverConfig.asset</c> and is wired
+    /// into the lifecycle manager; create a new one via
+    /// <c>Assets ▸ Create ▸ QR Reader ▸ Content Resolver Config</c> if needed.
     /// </remarks>
     [CreateAssetMenu(
         fileName = "ContentResolverConfig",

@@ -107,7 +107,8 @@ cleanly and keep the untrusted-input path isolated.
 - Decides whether downloaded bytes are an image, a GIF, or unsupported.
 - **Extension hint first**, `Content-Type` **header fallback** — both, in that order.
 - Routes: image → texture path; GIF → mgGif decode path; anything else → error state.
-- The "unsupported type → error state" path is the documented seam for future website support.
+- The "unsupported type → error state" path is the documented seam for future website support —
+  traced and confirmed clean in [`website-support-seam.md`](website-support-seam.md) (M6-T4).
 
 ### 3.6 Media decoders
 - **Image:** turns downloaded bytes into a Unity texture.
@@ -127,6 +128,11 @@ cleanly and keep the untrusted-input path isolated.
 ### 3.8 Configuration
 - Central place for the configurable values called out in the decisions: download size cap, timeout,
   HTTPS-only flag, and the render scale factor. Kept configurable per the project context.
+- Authored as two `ScriptableObject` assets under `Assets/QRReader/Runtime/Config/`:
+  `ContentResolverConfig` (the three download guards, wired into the lifecycle manager) and
+  `ContentRendererConfig` (the render scale factor, wired into the `QrContentInstance` prefab).
+- The full surface — defaults, clamps, effects, and where each value is authored — is documented in
+  [`configuration.md`](configuration.md).
 
 ### 3.9 Meta XR Unity MCP Extension *(ADR 0001, Editor-time only)*
 - The preferred, authoritative tool for Meta-XR **Editor** setup: Camera Rig, passthrough,
