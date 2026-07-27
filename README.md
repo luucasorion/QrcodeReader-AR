@@ -3,7 +3,7 @@
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="Logos/logo-dark.png">
   <source media="(prefers-color-scheme: light)" srcset="Logos/logo-light.png">
-  <img alt="QRcodeReader AR" src="Logos/logo-light.png" width="560">
+  <img alt="QRcodeReader AR" src="Logos/logo-light.png" width="960">
 </picture>
 
 <br>
