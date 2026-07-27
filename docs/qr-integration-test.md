@@ -62,7 +62,8 @@ The components under test are the wired pipeline: `QrDetectionSource` (§3.2) �
 | Download cap | **25 MiB** | oversized body is aborted mid-stream → error icon (§7) |
 
 (Finalizing/tuning this configuration surface is **M6-T1**; exercising every individual error path
-on device is **M6-T2**. This test only needs *one* failing code to prove the error path renders.)
+on device is **M6-T2** — see [`error-path-verification.md`](error-path-verification.md). This test
+only needs *one* failing code to prove the error path renders.)
 
 ---
 
