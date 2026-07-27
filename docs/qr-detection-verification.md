@@ -1,5 +1,10 @@
 # QR Reader — On-Device Detection Verification (M1-T4)
 
+> **Historical (M1).** The `QrDebugOverlay` this procedure relies on was the temporary M1
+> diagnostics HUD, **removed in M5-T5** once the real content pipeline/renderer replaced it. This
+> document is retained as the record of how M1 detection was verified; to reproduce it now, restore
+> the overlay from the M1 history. Ongoing multi-QR end-to-end verification is **M5-T6**.
+
 > The procedure to confirm, **on device**, that MRUK reports QR codes and that the
 > `TrackableAdded` / `TrackableRemoved` lifecycle fires with the correct payload, pose, and
 > size. Closes the M1 milestone once the checklist passes. Derived from
