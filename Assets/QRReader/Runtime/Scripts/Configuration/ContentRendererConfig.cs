@@ -10,9 +10,11 @@ namespace QRReader.Configuration
     /// so each system owns its configuration (§8 "keep boundaries clean").
     /// </summary>
     /// <remarks>
-    /// The default is a reasonable starting point; the configuration surface (this value plus the
-    /// resolver guards) is finalized/tuned on device in M6-T1. Create an asset via
-    /// <c>Assets ▸ Create ▸ QR Reader ▸ Content Renderer Config</c> and hand it to the renderer.
+    /// The full configuration surface (this value plus the resolver guards) is documented in
+    /// <c>docs/configuration.md</c> (finalized in M6-T1). The authored asset lives at
+    /// <c>Assets/QRReader/Runtime/Config/ContentRendererConfig.asset</c> and is wired into the
+    /// <c>QrContentInstance</c> prefab's renderer; create a new one via
+    /// <c>Assets ▸ Create ▸ QR Reader ▸ Content Renderer Config</c> if needed.
     /// </remarks>
     [CreateAssetMenu(
         fileName = "ContentRendererConfig",
@@ -22,7 +24,7 @@ namespace QRReader.Configuration
     {
         /// <summary>
         /// Default render scale factor: the content quad is drawn 3× the physical QR size so it's
-        /// comfortably readable at arm's length. Tuned on device in M6-T1.
+        /// comfortably readable at arm's length (M6-T1 default; see docs/configuration.md).
         /// </summary>
         public const float DefaultRenderScaleFactor = 3f;
 

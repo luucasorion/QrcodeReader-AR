@@ -42,7 +42,7 @@ Progress is tracked as milestones M0–M6 in the [implementation plan](docs/impl
 | M3 | Media decoders (image / GIF) | ✅ Done |
 | M4 | Renderer + feedback states | ✅ Done |
 | M5 | Multi-QR integration & teardown | ✅ Done |
-| M6 | Hardening & on-device verification | ⬜ Not started |
+| M6 | Hardening & on-device verification | 🚧 In progress |
 
 ---
 
@@ -123,7 +123,9 @@ detection, the printed code must be:
 - Printed **reasonably large**, and viewed **close and well-lit**.
 
 The URL is treated as **untrusted input**. Downloads are guarded by (all configurable):
-**HTTPS-only**, a **10 s timeout**, and a **~25 MB download cap**.
+**HTTPS-only**, a **10 s timeout**, and a **~25 MB download cap**. These guards plus the render
+**scale factor** are authored as Editor assets — see the
+[configuration reference](docs/configuration.md) for defaults, limits, and where each value lives.
 
 ## Architecture
 
@@ -140,6 +142,7 @@ picture and component responsibilities.
 | [Project context](docs/project-context.md) | Decisions, scope, requirements, constraints, rejected alternatives |
 | [Architecture](docs/architecture.md) | How the system is organized to satisfy those decisions |
 | [Build & deploy](docs/build-and-deploy.md) | Build the APK and run it on Quest 3 / 3S; the on-device iteration loop |
+| [Configuration](docs/configuration.md) | The four configurable values (HTTPS-only, timeout, download cap, scale factor): defaults, limits, and where they're authored |
 | [ADRs](docs/adr/) | [0001 — Meta XR Unity MCP Extension](docs/adr/0001-use-meta-xr-unity-mcp-extension.md) · [0002 — MRUK Trackables for QR](docs/adr/0002-detect-qr-with-mruk-trackables.md) · [0003 — QR payload is a runtime-downloaded URL](docs/adr/0003-qr-payload-is-runtime-downloaded-url.md) |
 | [Implementation plan](docs/implementation-plan.md) | Milestones M0–M6, tasks, dependencies, risks |
 
