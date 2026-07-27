@@ -23,7 +23,11 @@ namespace QRReader.Lifecycle
     /// short-circuits to the shared error visual ("fail to the error state, never silently", §8). The
     /// resolver awaits a network download, so the pipeline runs asynchronously per QR; each entry is
     /// independent, so one QR's pipeline neither blocks nor affects another's (§4 per-QR isolation).
-    /// Keeping the content instance aligned to the pose while tracked (M5-T2) and destroying the
+    /// N QRs are supported simultaneously with no cross-QR shared state (M5-T3): the per-QR mutable
+    /// state (renderer instance, decoded content, retirement flag) all lives on the <see cref="TrackedQrEntry"/>,
+    /// and the one shared collaborator — the <see cref="IContentResolver"/> — is reentrant (each
+    /// <see cref="IContentResolver.GetAsync"/> owns its own request), so concurrent pipelines never
+    /// interfere. Keeping the content instance aligned to the pose while tracked (M5-T2) and destroying the
     /// instance / freeing its textures on removal (M5-T4) build on this. Entries are keyed by the QR's
     /// <see cref="IQrCode.Pose"/> transform, which is stable for the QR's lifetime and identical across
     /// its detect/lost events.
@@ -47,7 +51,7 @@ namespace QRReader.Lifecycle
 
         private readonly Dictionary<Transform, TrackedQrEntry> _entries = new();
 
-        private ContentResolver _resolver;
+        private IContentResolver _resolver;
 
         /// <summary>Raised after a new QR entry is created.</summary>
         public event Action<TrackedQrEntry> EntryAdded;
@@ -243,5 +247,23 @@ namespace QRReader.Lifecycle
                 entry.Renderer.ShowError(entry.QrCode);
             }
         }
+
+        // --- Test seam (M5-T3) -----------------------------------------------
+        // The manager is the composition root: Awake wires the resolver from a serialized config and
+        // OnEnable subscribes to the detection source — neither runs in EditMode (no play mode, no
+        // MRUK). These internal hooks let the multi-QR EditMode tests inject a fake resolver + content
+        // prefab and raise detect/lost directly, so "N independent pipelines, no cross-QR shared state"
+        // (§4) is provable off device (§8) without widening the public API. With a fake resolver that
+        // completes synchronously, the whole per-QR pipeline runs before the raise call returns.
+
+        internal void ConfigureForTests(IContentResolver resolver, ContentRenderer prefab)
+        {
+            _resolver = resolver;
+            contentInstancePrefab = prefab;
+        }
+
+        internal void RaiseDetectedForTests(IQrCode qrCode) => OnQrCodeDetected(qrCode);
+
+        internal void RaiseLostForTests(IQrCode qrCode) => OnQrCodeLost(qrCode);
     }
 }

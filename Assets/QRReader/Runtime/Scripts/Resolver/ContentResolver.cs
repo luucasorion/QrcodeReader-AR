@@ -19,7 +19,7 @@ namespace QRReader.Resolver
     /// <c>MonoBehaviour</c>/MRUK dependency) so it stays EditMode-unit-testable off device
     /// (plan R1, §8); the lifecycle manager constructs it with a serialized config.
     /// </remarks>
-    public sealed class ContentResolver
+    public sealed class ContentResolver : IContentResolver
     {
         private readonly ContentResolverConfig _config;
 
