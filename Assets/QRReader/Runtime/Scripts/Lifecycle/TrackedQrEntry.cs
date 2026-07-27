@@ -12,8 +12,9 @@ namespace QRReader.Lifecycle
     /// Beyond the detected <see cref="IQrCode"/> it holds the per-QR pipeline's outputs (M5-T1): the
     /// <see cref="Renderer"/> content instance that shows the loading/error/media state, and the
     /// <see cref="Content"/> handle that owns any decoded texture(s). Both are created on add and
-    /// released on removal (destroy + texture free land in M5-T4). <see cref="IsRetired"/> lets the
-    /// asynchronous pipeline abandon its result if the QR is lost while a download is still in flight.
+    /// released on removal — the instance destroyed and its textures freed (M5-T4, §7).
+    /// <see cref="IsRetired"/> lets the asynchronous pipeline abandon its result if the QR is lost
+    /// while a download is still in flight.
     /// </remarks>
     public sealed class TrackedQrEntry
     {
