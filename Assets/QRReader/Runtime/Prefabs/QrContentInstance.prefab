@@ -105,7 +105,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4c0e732b6569479bba1ca39ebe42d4b0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: QRReader.Runtime::QRReader.Rendering.ContentRenderer
-  _config: {fileID: 0}
+  _config: {fileID: 11400000, guid: fc71fcf1ca10436881ed54f1eef952af, type: 2}
 --- !u!1001 &1759176709141338056
 PrefabInstance:
   m_ObjectHideFlags: 0
