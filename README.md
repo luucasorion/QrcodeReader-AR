@@ -3,38 +3,76 @@
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="Logos/logo-dark.png">
   <source media="(prefers-color-scheme: light)" srcset="Logos/logo-light.png">
-  <img alt="QRcodeReader AR" src="Logos/logo-light.png" width="560">
+  <img alt="QRcodeReader AR" src="Logos/logo-light.png" width="960">
 </picture>
 
 <br>
+<br>
 
-[![Status: MVP implemented](https://img.shields.io/badge/status-MVP%20implemented-brightgreen)](docs/implementation-plan.md)
+**Turn any printed QR code into mixed-reality media on Meta Quest 3.**
+
+<br>
+
+[![Release: v1.0.0](https://img.shields.io/badge/release-v1.0.0-brightgreen)](docs/implementation-plan.md)
+[![Status: Stable](https://img.shields.io/badge/status-stable-brightgreen)](#status)
 [![Platform: Quest 3 / 3S](https://img.shields.io/badge/platform-Quest%203%20%2F%203S-1c1e21)](docs/project-context.md)
 [![Engine: Unity 6 + URP](https://img.shields.io/badge/engine-Unity%206%20%2B%20URP-000000)](docs/architecture.md)
 [![Meta XR SDK v203](https://img.shields.io/badge/Meta%20XR%20SDK-v203-0467df)](docs/adr/0001-use-meta-xr-unity-mcp-extension.md)
 [![License: internal / TBD](https://img.shields.io/badge/license-internal%20%2F%20TBD-lightgrey)](#license)
 
+<br>
+
+[**Usage**](docs/usage.md) ·
+[**Build & Deploy**](docs/build-and-deploy.md) ·
+[**Architecture**](#architecture) ·
+[**Configuration**](docs/configuration.md) ·
+[**ADRs**](docs/adr/)
+
 </div>
-
-A Meta Quest 3 / 3S **passthrough mixed-reality** app: you see the real world through
-passthrough, and when the headset detects a printed **QR code**, the app downloads the media
-referenced by the QR's URL and renders it — an **image or GIF** — in place of the physical code,
-tracked to its real-world pose. Multiple QR codes are tracked and rendered at once.
-
-> **Note:** this is an **AR / passthrough MR** experience — the real world stays visible — **not**
-> VR (a fully virtual scene). The docs and this README use "AR / passthrough MR" throughout.
 
 ---
 
+QRcodeReader AR is a Meta Quest 3 / 3S **passthrough mixed-reality** app. You see the real world
+through passthrough, and when the headset detects a printed **QR code**, the app downloads the media
+referenced by the code's URL and renders it — an **image or GIF** — in place of the physical code,
+tracked to its real-world pose. Multiple codes are tracked and rendered simultaneously.
+
+> **This is an AR / passthrough MR experience** — the real world stays visible — **not** VR (a fully
+> virtual scene). The docs and this README use "AR / passthrough MR" throughout.
+
+## Demo
+
+<div align="center">
+
+<img alt="Headset POV: a printed QR code resolved to an image, rendered on its pose through passthrough" src="docs/media/demo_example.jpg" width="720">
+
+<br>
+<em>Headset POV — a printed QR code resolved to an image, rendered on its real-world pose through passthrough.</em>
+
+</div>
+
 ## Status
 
-✅ **MVP implemented.** All milestones M0–M6 have landed — detection, the per-QR
-resolve/classify/decode/render pipeline, multi-QR tracking and teardown, the feedback states, and the
-finalized configuration surface. On-device acceptance is exercised through the documented
-[verification procedures](docs/usage.md#4-verify-on-device) (integration, error paths, memory); see
-each doc's result log for recorded runs.
+**v1.0.0 — Stable.** The full detect → resolve → classify → decode → render pipeline is
+implemented, with multi-QR tracking and teardown, loading/error feedback states, and a finalized
+configuration surface. On-device behavior is exercised through documented
+[verification procedures](docs/usage.md#4-verify-on-device) (integration, error paths, memory); each
+doc keeps a result log of recorded runs.
 
-Progress is tracked as milestones M0–M6 in the [implementation plan](docs/implementation-plan.md):
+Delivered feature set:
+
+- ✅ QR detection through Quest passthrough (MRUK Trackables)
+- ✅ Runtime `https://` download of the code's payload, behind safety guards
+- ✅ **Image and GIF** rendering at the code's real-world pose
+- ✅ **Multiple QR codes** tracked and rendered simultaneously
+- ✅ Loading and error visual states, with clean teardown on removal
+
+<details>
+<summary><strong>Development history — milestones M0–M6</strong></summary>
+
+<br>
+
+Progress was tracked as milestones M0–M6 in the [implementation plan](docs/implementation-plan.md):
 
 | ID | Milestone | Status |
 |----|-----------|--------|
@@ -46,33 +84,82 @@ Progress is tracked as milestones M0–M6 in the [implementation plan](docs/impl
 | M5 | Multi-QR integration & teardown | ✅ Done |
 | M6 | Hardening & on-device verification | ✅ Done |
 
----
+</details>
 
-## What it does
+## How it works
 
-For each detected QR code, the app runs a short pipeline:
+For each detected QR code, the app runs a short, sequential pipeline:
 
 1. **Detect** — Meta MRUK reports a QR code with its pose, physical size, and payload string.
 2. **Resolve** — the payload is an `https://` URL; the app downloads the bytes under safety guards
    and classifies the content type.
-3. **Render** — a flush, coplanar quad is placed at the QR's pose (sized from the code and scaled by
-   a configurable factor) and the image or GIF is displayed on it.
+3. **Render** — a flush, coplanar quad is placed at the code's pose (sized from the code and scaled
+   by a configurable factor) and the image or GIF is displayed on it.
 4. **Track & tear down** — the content follows the code while it's tracked; when the code leaves,
-   the content instance is destroyed and its textures freed.
+   the content instance is destroyed and its textures are freed.
 
 A loading spinner shows on detect; a shared error icon shows on any failure (bad URL, timeout,
 oversized download, network error, or unsupported content type).
 
+## Architecture
+
+The runtime is split into a detection source, a per-QR lifecycle manager, a content resolver
+(download + guards), a content-type classifier, media decoders, and a renderer. The untrusted-input
+download path is deliberately isolated behind the resolver.
+
+```mermaid
+flowchart LR
+    QR([Printed QR code]):::world
+
+    subgraph XR["Meta XR / MRUK"]
+        MRUK[MRUK Trackable<br/>pose · size · payload]:::meta
+    end
+
+    subgraph APP["App runtime"]
+        direction TB
+        LM[Lifecycle manager<br/>one instance per QR]:::app
+        RES[Content resolver<br/>HTTPS-only · timeout · size cap]:::guard
+        CLS[Content-type classifier<br/>extension → header]:::app
+        DEC[Media decoders<br/>image · GIF via mgGif]:::app
+        REN[Renderer<br/>quad at pose · states]:::app
+    end
+
+    SRV[(Remote server<br/>image / GIF)]:::ext
+
+    QR -- passthrough --> MRUK
+    MRUK -- TrackableAdded / Removed --> LM
+    LM --> RES
+    RES <-- https GET --> SRV
+    RES --> CLS --> DEC --> REN
+    RES -. failure .-> REN
+    CLS -. unsupported .-> REN
+    REN -- media on QR pose --> QR
+
+    classDef world fill:#1c1e21,stroke:#8c94a0,color:#e8ecf2;
+    classDef meta fill:#0467df,stroke:#0467df,color:#ffffff;
+    classDef app fill:#20232b,stroke:#3a4150,color:#e8ecf2;
+    classDef guard fill:#20232b,stroke:#e0a800,color:#e8ecf2;
+    classDef ext fill:#2a1c1c,stroke:#b04545,color:#e8ecf2;
+```
+
+Any stage can short-circuit to the renderer's **error state**. Because there is one content instance
+per QR, each code runs its own pipeline — a failure or teardown of one never affects the others.
+
+For component responsibilities, communication, data flow, and constraints, see
+[**`docs/architecture.md`**](docs/architecture.md).
+
 ## Features & scope
 
-**In scope (MVP)**
+**In scope (v1.0)**
+
 - QR detection through Quest passthrough (MRUK Trackables).
 - QR payload is an `https://` URL, downloaded at runtime.
-- Render **images and GIFs** at the QR's location.
+- Render **images and GIFs** at the code's location.
 - Track and render **multiple QR codes simultaneously** (one content instance per code).
 - Loading and error visual states.
 
 **Out of scope (deferred)**
+
 - Website / non-image-and-GIF content rendering (the "unsupported → error" path is the seam for
   future website support).
 - Spatial-anchor persistence / world-locking beyond MRUK's live tracking.
@@ -86,7 +173,7 @@ Adding any of these requires a new or updated ADR (see [conventions](docs/archit
 - **Engine:** Unity 6 with the Universal Render Pipeline (URP).
 - **XR:** Meta XR SDK (`com.meta.xr.sdk.all`, v203) + MRUK, on OpenXR.
 - **Networking:** Unity web request modules (runtime `https` download).
-- **GIF decoding:** [mgGif](https://github.com/gwaredd/mgGif) — added as a pinned git dependency in
+- **GIF decoding:** [mgGif](https://github.com/gwaredd/mgGif) — pinned git dependency in
   `Packages/manifest.json` (`com.gwaredd.mggif`).
 
 ## Getting started
@@ -95,11 +182,15 @@ Adding any of these requires a new or updated ADR (see [conventions](docs/archit
 > first-run-only QR detection bug — do not rely on it for QR testing.
 
 **Prerequisites**
+
 - Unity 6 with Android build support.
-- A Meta Quest 3 / 3S in developer mode.
+- A Meta Quest 3 / 3S in developer mode, with
+  [**installs from unknown sources enabled**](https://www.meta.com/help/quest/291654372573077/)
+  (Meta's official guide) so you can sideload the build.
 - The Meta XR SDK v203 packages (imported via the Unity Package Manager / `Packages/manifest.json`).
 
-**High-level build & deploy**
+**Build & deploy**
+
 1. Open the project in Unity 6.
 2. Ensure the Android build target, URP, and OpenXR are configured (see device setup below).
 3. Build an Android APK and deploy it to the headset (on-device — not Link).
@@ -108,7 +199,8 @@ Adding any of these requires a new or updated ADR (see [conventions](docs/archit
 For the detailed, authoritative build-and-deploy loop, see
 [**Build & on-device deploy loop**](docs/build-and-deploy.md).
 
-### Required device setup for QR tracking
+**Required device setup for QR tracking**
+
 - **Spatial Data** permission enabled on the device.
 - **Camera Rig + Passthrough Layer** building blocks in the scene.
 - **OVRManager:** Scene Support = *Required*, Anchor Support = *Enabled*.
@@ -119,8 +211,8 @@ For the detailed, authoritative build-and-deploy loop, see
 > For the full end-to-end walkthrough — authoring, config, build/run, and on-device verification —
 > see the [**Usage guide**](docs/usage.md).
 
-The content of a QR code is a single `https://` URL pointing at an image or GIF. For reliable
-detection, the printed code must be:
+A QR code's content is a single `https://` URL pointing at an image or GIF. For reliable detection,
+the printed code must be:
 
 - QR **version ≤ 10**.
 - **Not** a micro-QR code.
@@ -131,14 +223,6 @@ The URL is treated as **untrusted input**. Downloads are guarded by (all configu
 **HTTPS-only**, a **10 s timeout**, and a **~25 MB download cap**. These guards plus the render
 **scale factor** are authored as Editor assets — see the
 [configuration reference](docs/configuration.md) for defaults, limits, and where each value lives.
-
-## Architecture
-
-The runtime is split into a detection source (MRUK Trackables), a per-QR lifecycle manager, a
-content resolver (download + guards), a content-type classifier, media decoders (image / GIF), and
-a renderer that draws the quad and the feedback states. The untrusted-input download path is kept
-isolated behind the resolver. See [`docs/architecture.md`](docs/architecture.md) for the full
-picture and component responsibilities.
 
 ## Documentation
 
@@ -172,14 +256,15 @@ them ship on device.
 
 ## Contributing — git workflow (required)
 
-Never commit or push directly to `main`. For **any** change:
+`dev` is the integration branch; `main` is the stable/release branch. Never commit or push directly
+to `dev` or `main`. For **any** change:
 
-1. Create a descriptive branch off `main` (`feat/…`, `fix/…`, `docs/…`, `chore/…`).
+1. Create a descriptive branch **off `dev`** (`feat/…`, `fix/…`, `docs/…`, `chore/…`).
 2. Commit with a clear message.
-3. Push the branch and open a **pull request** describing what changed and why.
-4. **Leave merging the PR to the repo owner** — do not merge, and do not push to `main`.
+3. Push the branch and open a **pull request targeting `dev`** describing what changed and why.
+4. **Leave merging the PR to the repo owner** — do not merge, and do not push to `dev` or `main`.
 
-Group related work into one branch/PR; never force-push shared branches or `main`. See
+Group related work into one branch/PR; never force-push shared branches, `dev`, or `main`. See
 [`CLAUDE.md`](CLAUDE.md) for the authoritative version.
 
 ## License
