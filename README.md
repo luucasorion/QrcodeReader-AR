@@ -187,7 +187,9 @@ Adding any of these requires a new or updated ADR (see [conventions](docs/archit
 **Prerequisites**
 
 - Unity 6 with Android build support.
-- A Meta Quest 3 / 3S in developer mode.
+- A Meta Quest 3 / 3S in developer mode, with
+  [**installs from unknown sources enabled**](https://www.meta.com/help/quest/291654372573077/)
+  (Meta's official guide) so you can sideload the build.
 - The Meta XR SDK v203 packages (imported via the Unity Package Manager / `Packages/manifest.json`).
 
 **Build & deploy**
