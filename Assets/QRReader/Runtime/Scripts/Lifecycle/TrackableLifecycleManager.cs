@@ -27,8 +27,9 @@ namespace QRReader.Lifecycle
     /// state (renderer instance, decoded content, retirement flag) all lives on the <see cref="TrackedQrEntry"/>,
     /// and the one shared collaborator — the <see cref="IContentResolver"/> — is reentrant (each
     /// <see cref="IContentResolver.GetAsync"/> owns its own request), so concurrent pipelines never
-    /// interfere. Keeping the content instance aligned to the pose while tracked (M5-T2) and destroying the
-    /// instance / freeing its textures on removal (M5-T4) build on this. Entries are keyed by the QR's
+    /// interfere. The content instance is kept aligned to the pose while tracked (M5-T2), and on removal
+    /// the instance is destroyed and its owned textures (especially GIF frames) are freed (M5-T4, §7).
+    /// Entries are keyed by the QR's
     /// <see cref="IQrCode.Pose"/> transform, which is stable for the QR's lifetime and identical across
     /// its detect/lost events.
     /// </remarks>
@@ -143,11 +144,40 @@ namespace QRReader.Lifecycle
             }
 
             // Retire before removing so an in-flight pipeline (still awaiting the download) abandons its
-            // result rather than driving this instance. Destroying the content instance and freeing
-            // entry.Content's textures is M5-T4.
+            // result rather than driving this instance (it disposes its own decoded content when it
+            // sees the entry is no longer live).
             entry.IsRetired = true;
             _entries.Remove(key);
             EntryRemoved?.Invoke(entry);
+
+            // Teardown (M5-T4, §7): free the decoded textures (especially GIF frames) and destroy the
+            // content instance so nothing lingers and no texture leaks. No caching — if the QR returns
+            // it is rebuilt from scratch. The instance's own visuals (media material, spinner/error
+            // materials + textures) are freed by their OnDestroy when the GameObject is destroyed.
+            entry.Content?.Dispose();
+            entry.Content = null;
+            DestroyInstance(entry.Renderer);
+            entry.Renderer = null;
+        }
+
+        // Destroy is disallowed in edit mode (EditMode tests), so pick the right call — the same
+        // play/edit rule TextureCleanup applies to textures, here for the content instance GameObject.
+        private static void DestroyInstance(ContentRenderer renderer)
+        {
+            if (renderer == null)
+            {
+                return;
+            }
+
+            GameObject instance = renderer.gameObject;
+            if (Application.isPlaying)
+            {
+                Destroy(instance);
+            }
+            else
+            {
+                DestroyImmediate(instance);
+            }
         }
 
         // Synchronous half of the pipeline: create the content instance and show loading immediately,
@@ -193,7 +223,7 @@ namespace QRReader.Lifecycle
             ResolveResult resolved = await _resolver.GetAsync(qr.Payload);
             if (!IsLive(entry))
             {
-                return; // QR lost while downloading — abandon the result (teardown is M5-T4).
+                return; // QR lost while downloading — abandon the result; teardown already ran on removal.
             }
 
             if (!resolved.Success)
@@ -209,8 +239,8 @@ namespace QRReader.Lifecycle
 
             if (!IsLive(entry))
             {
-                // Lost during/after the (synchronous) decode: free any textures we just produced so a
-                // removed QR doesn't leak them (until M5-T4 owns teardown).
+                // Lost during/after the (synchronous) decode: this content never reached the entry, so
+                // teardown couldn't free it — dispose it here so a removed QR doesn't leak its textures.
                 decoded.Content?.Dispose();
                 return;
             }
