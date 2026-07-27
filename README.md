@@ -181,15 +181,31 @@ Adding any of these requires a new or updated ADR (see [conventions](docs/archit
 
 ## Getting started
 
-> **On-device only.** All QR-detection testing must use **on-device builds**. Play-over-Link has a
-> first-run-only QR detection bug — do not rely on it for QR testing.
+> **On-device only.** QR detection runs on the headset. Play-over-Link has a first-run-only QR
+> detection bug — do not rely on it for QR testing.
+
+### Install (recommended)
+
+Most people don't need to build anything — grab the packaged APK and sideload it:
+
+1. Download the latest `.apk` from the
+   [**Releases**](https://github.com/luucasorion/QrcodeReader-AR/releases/latest) page.
+2. Put your Quest 3 / 3S in developer mode and
+   [**enable installs from unknown sources**](https://www.meta.com/help/quest/291654372573077/)
+   (Meta's official guide).
+3. Sideload the APK — e.g. `adb install QRcodeReaderAR.apk`, or drag it in via
+   [SideQuest](https://sidequestvr.com/).
+4. Launch the app, grant the **Spatial Data** permission when prompted, and point the headset at a
+   compliant QR code.
+
+### Build from source
+
+For contributors who want to build the APK themselves:
 
 **Prerequisites**
 
 - Unity 6 with Android build support.
-- A Meta Quest 3 / 3S in developer mode, with
-  [**installs from unknown sources enabled**](https://www.meta.com/help/quest/291654372573077/)
-  (Meta's official guide) so you can sideload the build.
+- A Meta Quest 3 / 3S in developer mode, with installs from unknown sources enabled (see above).
 - The Meta XR SDK v203 packages (imported via the Unity Package Manager / `Packages/manifest.json`).
 
 **Build & deploy**
