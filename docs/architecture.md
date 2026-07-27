@@ -107,7 +107,8 @@ cleanly and keep the untrusted-input path isolated.
 - Decides whether downloaded bytes are an image, a GIF, or unsupported.
 - **Extension hint first**, `Content-Type` **header fallback** — both, in that order.
 - Routes: image → texture path; GIF → mgGif decode path; anything else → error state.
-- The "unsupported type → error state" path is the documented seam for future website support.
+- The "unsupported type → error state" path is the documented seam for future website support —
+  traced and confirmed clean in [`website-support-seam.md`](website-support-seam.md) (M6-T4).
 
 ### 3.6 Media decoders
 - **Image:** turns downloaded bytes into a Unity texture.
