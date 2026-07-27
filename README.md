@@ -8,7 +8,7 @@
 
 <br>
 
-[![Status: early development](https://img.shields.io/badge/status-early%20development-orange)](docs/implementation-plan.md)
+[![Status: MVP implemented](https://img.shields.io/badge/status-MVP%20implemented-brightgreen)](docs/implementation-plan.md)
 [![Platform: Quest 3 / 3S](https://img.shields.io/badge/platform-Quest%203%20%2F%203S-1c1e21)](docs/project-context.md)
 [![Engine: Unity 6 + URP](https://img.shields.io/badge/engine-Unity%206%20%2B%20URP-000000)](docs/architecture.md)
 [![Meta XR SDK v203](https://img.shields.io/badge/Meta%20XR%20SDK-v203-0467df)](docs/adr/0001-use-meta-xr-unity-mcp-extension.md)
@@ -28,9 +28,11 @@ tracked to its real-world pose. Multiple QR codes are tracked and rendered at on
 
 ## Status
 
-🚧 **Early development.** Planning is complete — the [docs](docs/) and [ADRs](docs/adr/) are
-written — and implementation is just beginning. **Nothing runs on-device yet.** The features below
-describe the *target* MVP, not shipped behaviour.
+✅ **MVP implemented.** All milestones M0–M6 have landed — detection, the per-QR
+resolve/classify/decode/render pipeline, multi-QR tracking and teardown, the feedback states, and the
+finalized configuration surface. On-device acceptance is exercised through the documented
+[verification procedures](docs/usage.md#4-verify-on-device) (integration, error paths, memory); see
+each doc's result log for recorded runs.
 
 Progress is tracked as milestones M0–M6 in the [implementation plan](docs/implementation-plan.md):
 
@@ -42,7 +44,7 @@ Progress is tracked as milestones M0–M6 in the [implementation plan](docs/impl
 | M3 | Media decoders (image / GIF) | ✅ Done |
 | M4 | Renderer + feedback states | ✅ Done |
 | M5 | Multi-QR integration & teardown | ✅ Done |
-| M6 | Hardening & on-device verification | 🚧 In progress |
+| M6 | Hardening & on-device verification | ✅ Done |
 
 ---
 
@@ -84,8 +86,8 @@ Adding any of these requires a new or updated ADR (see [conventions](docs/archit
 - **Engine:** Unity 6 with the Universal Render Pipeline (URP).
 - **XR:** Meta XR SDK (`com.meta.xr.sdk.all`, v203) + MRUK, on OpenXR.
 - **Networking:** Unity web request modules (runtime `https` download).
-- **GIF decoding:** [mgGif](https://github.com/gwaredd/mgGif) — *planned dependency, not yet added to
-  the project* (see task M3-T1 in the plan).
+- **GIF decoding:** [mgGif](https://github.com/gwaredd/mgGif) — added as a pinned git dependency in
+  `Packages/manifest.json` (`com.gwaredd.mggif`).
 
 ## Getting started
 
@@ -114,6 +116,9 @@ For the detailed, authoritative build-and-deploy loop, see
 
 ## Authoring a compliant QR code
 
+> For the full end-to-end walkthrough — authoring, config, build/run, and on-device verification —
+> see the [**Usage guide**](docs/usage.md).
+
 The content of a QR code is a single `https://` URL pointing at an image or GIF. For reliable
 detection, the printed code must be:
 
@@ -139,6 +144,7 @@ picture and component responsibilities.
 
 | Doc | What it covers |
 |-----|----------------|
+| [Usage guide](docs/usage.md) | End-to-end: author a QR, the config values, build/run on device, and the verification procedures |
 | [Project context](docs/project-context.md) | Decisions, scope, requirements, constraints, rejected alternatives |
 | [Architecture](docs/architecture.md) | How the system is organized to satisfy those decisions |
 | [Build & deploy](docs/build-and-deploy.md) | Build the APK and run it on Quest 3 / 3S; the on-device iteration loop |
