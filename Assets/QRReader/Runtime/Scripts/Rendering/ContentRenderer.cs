@@ -18,8 +18,9 @@ namespace QRReader.Rendering
     /// objects, discovered at runtime, so exactly one of {loading, error, media} is visible per state.
     /// It owns only its <b>media material instance</b> (freed on destroy, §7); the frame textures are
     /// owned by the <see cref="DecodedContent"/> the lifecycle passes in and frees on teardown (M5-T4).
-    /// Pose-follow while tracked is M5-T2; the sizing/timing math is the pure, tested
-    /// <see cref="ContentQuadFit"/> and <see cref="GifPlayback"/>.
+    /// While the QR is tracked it re-aligns the quad to the trackable's live (low-frequency) pose each
+    /// <c>Update</c> (<see cref="FollowPose"/>, M5-T2, §3.3/§4); the sizing/timing math is the pure,
+    /// tested <see cref="ContentQuadFit"/> and <see cref="GifPlayback"/>.
     /// </remarks>
     [RequireComponent(typeof(MeshRenderer))]
     public sealed class ContentRenderer : MonoBehaviour
@@ -47,6 +48,9 @@ namespace QRReader.Rendering
         private float _elapsedMs;
         private int _frameIndex;
 
+        // The QR whose live pose the quad follows (M5-T2). Set when a state is shown, cleared on Hide.
+        private IQrCode _qrCode;
+
         /// <summary>The scale factor in effect — from <see cref="_config"/>, or the default if unset.</summary>
         public float ScaleFactor =>
             _config != null ? _config.RenderScaleFactor : ContentRendererConfig.DefaultRenderScaleFactor;
@@ -65,6 +69,9 @@ namespace QRReader.Rendering
 
         private void Update()
         {
+            // Keep the quad on the trackable's live pose while it's tracked (M5-T2), then advance the GIF.
+            FollowPose();
+
             // Advance an animated GIF; a still image (≤ 1 frame) needs no per-frame work.
             if (CurrentState != State.Media || _frames == null || _frames.Count <= 1)
             {
@@ -89,6 +96,7 @@ namespace QRReader.Rendering
         {
             EnsureInitialized();
             StopPlayback();
+            _qrCode = null; // no QR to follow while hidden
             _mediaRenderer.enabled = false;
             _loadingSpinner?.SetVisible(false);
             _errorIcon?.SetVisible(false);
@@ -100,6 +108,7 @@ namespace QRReader.Rendering
         {
             EnsureInitialized();
             StopPlayback();
+            _qrCode = qrCode;
             Fit(qrCode);
             _mediaRenderer.enabled = false;
             _errorIcon?.SetVisible(false);
@@ -115,6 +124,7 @@ namespace QRReader.Rendering
         {
             EnsureInitialized();
             StopPlayback();
+            _qrCode = qrCode;
             Fit(qrCode);
             _mediaRenderer.enabled = false;
             _loadingSpinner?.SetVisible(false);
@@ -142,6 +152,7 @@ namespace QRReader.Rendering
                 return false;
             }
 
+            _qrCode = qrCode;
             _loadingSpinner?.SetVisible(false);
             _errorIcon?.SetVisible(false);
 
@@ -197,6 +208,33 @@ namespace QRReader.Rendering
             _frameDelaysMs = null;
             _elapsedMs = 0f;
             _frameIndex = 0;
+        }
+
+        // --- Pose follow (M5-T2) ---------------------------------------------
+
+        /// <summary>
+        /// Re-aligns the quad to the current QR's live pose, preserving the active state's sizing (plane
+        /// for loading/error, letterboxed content for media). A no-op while hidden, with no QR, or when
+        /// the QR is not currently tracked — so on tracking loss the quad holds its last pose rather than
+        /// snapping or collapsing (§3.3/§4; MRUK poses are low-frequency, ADR 0002). Called each
+        /// <c>Update</c>; also exposed so EditMode tests can drive one alignment step without play mode.
+        /// </summary>
+        public void FollowPose()
+        {
+            if (_qrCode == null || CurrentState == State.Hidden || !_qrCode.IsTracked)
+            {
+                return;
+            }
+
+            if (CurrentState == State.Media && _frames != null && _frames.Count > 0)
+            {
+                // Frames share dimensions, so frame 0 keeps the letterbox stable across GIF playback.
+                FitContent(_qrCode, _frames[0].Texture);
+            }
+            else
+            {
+                Fit(_qrCode);
+            }
         }
 
         // --- Placement / sizing (M4-T2 / M4-T3) ------------------------------
